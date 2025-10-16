@@ -5,7 +5,8 @@ void main() => runApp(const MaterialApp(home: TaskApp()));
 class Task {
   String name;
   bool done;
-  Task(this.name, {this.done = false});
+  int pr; // 0=Low, 1=Med, 2=High
+  Task(this.name, {this.done = false, this.pr = 1});
 }
 
 class TaskApp extends StatefulWidget {
@@ -16,13 +17,16 @@ class TaskApp extends StatefulWidget {
 
 class _TaskAppState extends State<TaskApp> {
   final _c = TextEditingController();
+  final _labels = const ['Low', 'Med', 'High'];
   final _tasks = <Task>[];
+  int _selPr = 1;
+  bool _highFirst = true;
 
   void _add() {
     final t = _c.text.trim();
     if (t.isEmpty) return;
     setState(() {
-      _tasks.add(Task(t));
+      _tasks.add(Task(t, pr: _selPr));
       _c.clear();
     });
   }
@@ -31,10 +35,23 @@ class _TaskAppState extends State<TaskApp> {
 
   void _delete(int i) => setState(() => _tasks.removeAt(i));
 
+  void _sort() {
+    setState(() {
+      _tasks.sort((a, b) {
+        final cmp = b.pr.compareTo(a.pr); // high --> low
+        return _highFirst ? cmp : -cmp;
+      });
+      _highFirst = !_highFirst;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Task Manager — Part 2')),
+      appBar: AppBar(
+        title: const Text('Task Manager'),
+        actions: [IconButton(onPressed: _sort, icon: const Icon(Icons.sort))],
+      ),
       body: Column(
         children: [
           Padding(
@@ -51,6 +68,12 @@ class _TaskAppState extends State<TaskApp> {
                 ),
               ),
               const SizedBox(width: 8),
+              DropdownButton<int>(
+                value: _selPr,
+                items: List.generate(3, (i) => DropdownMenuItem(value: i, child: Text(_labels[i]))),
+                onChanged: (v) => setState(() => _selPr = v ?? 1),
+              ),
+              const SizedBox(width: 8),
               FilledButton(onPressed: _add, child: const Text('Add')),
             ]),
           ),
@@ -63,7 +86,7 @@ class _TaskAppState extends State<TaskApp> {
                 return ListTile(
                   leading: Checkbox(value: t.done, onChanged: (v) => _toggle(i, v)),
                   title: Text(
-                    t.name,
+                    '${t.name}  [${_labels[t.pr]}]',
                     style: TextStyle(decoration: t.done ? TextDecoration.lineThrough : null),
                   ),
                   trailing: IconButton(
