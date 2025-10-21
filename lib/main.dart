@@ -7,7 +7,7 @@ void main() => runApp(const MyApp());
 class Task {
   String name;
   bool done;
-  int pr; 
+  int pr; // 0=Low, 1=Med, 2=High
   Task(this.name, {this.done = false, this.pr = 1});
 
   Map<String, dynamic> toMap() => {'name': name, 'done': done, 'pr': pr};
@@ -22,7 +22,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   final _labels = const ['Low', 'Med', 'High'];
   final _tasks = <Task>[];
   final _c = TextEditingController();
@@ -48,7 +47,7 @@ class _MyAppState extends State<MyApp> {
         ..clear()
         ..addAll(list.map(Task.fromMap));
     }
-    setState(() {}); 
+    setState(() {});
   }
 
   Future<void> _saveTasks() async {
@@ -84,8 +83,8 @@ class _MyAppState extends State<MyApp> {
   void _sort() {
     setState(() {
       _tasks.sort((a, b) {
-        final cmp = b.pr.compareTo(a.pr);
-        return _highFirst ? cmp : -cmp;
+        final cmp = b.pr.compareTo(a.pr); // high→low
+        return _highFirst ? cmp : -cmp;   // toggle order
       });
       _highFirst = !_highFirst;
     });
@@ -100,11 +99,14 @@ class _MyAppState extends State<MyApp> {
       darkTheme: ThemeData(brightness: Brightness.dark, useMaterial3: true, colorSchemeSeed: Colors.blue),
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Task Manager — Part 5'),
-          actions: [
-            IconButton(onPressed: _sort, icon: const Icon(Icons.sort)),
-            Row(children: [
-              const Text('Dark'),
+          centerTitle: false,
+          titleSpacing: 8,
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(onPressed: _sort, icon: const Icon(Icons.sort), tooltip: 'Sort by priority'),
+              const SizedBox(width: 8),
+              const Text('Themes'),
               Switch(
                 value: _dark,
                 onChanged: (v) {
@@ -112,9 +114,12 @@ class _MyAppState extends State<MyApp> {
                   _saveTheme();
                 },
               ),
+              const SizedBox(width: 12),
+              const VerticalDivider(width: 12, thickness: 1),
               const SizedBox(width: 8),
-            ]),
-          ],
+              const Text('Task Manager App'),
+            ],
+          ),
         ),
         body: Column(
           children: [
